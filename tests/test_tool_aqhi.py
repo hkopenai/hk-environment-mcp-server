@@ -1,9 +1,18 @@
+"""
+Module for testing the AQHI tool functionality.
+This module contains unit tests to verify fetching and parsing of AQHI data.
+"""
+
 import unittest
 from unittest.mock import patch, Mock
 from hkopenai.hk_environment_mcp_server import tool_aqhi
 
 
 class TestAQHITool(unittest.TestCase):
+    """
+    Test class for verifying AQHI tool functionality.
+    This class contains tests to ensure correct fetching and parsing of AQHI data from the Environmental Protection Department.
+    """
     def setUp(self):
         self.sample_xml = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -47,6 +56,12 @@ class TestAQHITool(unittest.TestCase):
 
     @patch("requests.get")
     def test_fetch_aqhi_data(self, mock_get):
+        """
+        Test fetching AQHI data from the Environmental Protection Department RSS feed.
+        Verifies that the data is fetched correctly using a mocked HTTP response.
+        Args:
+            mock_get: Mock object for the requests.get function.
+        """
         mock_response = Mock()
         mock_response.text = self.sample_xml
         mock_response.raise_for_status.return_value = None
@@ -59,6 +74,10 @@ class TestAQHITool(unittest.TestCase):
         )
 
     def test_parse_aqhi_data(self):
+        """
+        Test parsing of AQHI XML data to extract air quality information.
+        Verifies that the XML data is correctly parsed into a list of dictionaries.
+        """
         result = tool_aqhi.parse_aqhi_data(self.sample_xml)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["station"], "Central/Western")
@@ -72,6 +91,12 @@ class TestAQHITool(unittest.TestCase):
 
     @patch("hkopenai.hk_environment_mcp_server.tool_aqhi.fetch_aqhi_data")
     def test_get_current_aqhi(self, mock_fetch):
+        """
+        Test retrieval of current AQHI data for monitoring stations.
+        Verifies that the function fetches and parses data correctly using a mocked fetch operation.
+        Args:
+            mock_fetch: Mock object for the fetch_aqhi_data function.
+        """
         mock_fetch.return_value = self.sample_xml
 
         result = tool_aqhi.get_current_aqhi()
