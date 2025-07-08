@@ -38,12 +38,15 @@ def main():
     parser.add_argument(
         "-s", "--sse", action="store_true", help="Run in SSE mode instead of stdio"
     )
+    parser.add_argument(
+        "--host", type=str, default="127.0.0.1", help="Host to bind the server to"
+    )
     args = parser.parse_args()
 
     server = create_mcp_server()
 
     if args.sse:
-        server.run(transport="streamable-http")
+        server.run(transport="streamable-http", host=args.host)
     else:
         server.run()
 
