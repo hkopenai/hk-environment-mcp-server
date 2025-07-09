@@ -29,24 +29,16 @@ def create_mcp_server():
     return mcp
 
 
-def main():
+def main(args):
     """
     Main function to run the HK OpenAI Environment MCP Server.
-    Parses command line arguments and starts the server in the specified mode.
+    Args:
+        args: Command line arguments passed to the function.
     """
-    parser = argparse.ArgumentParser(description="HKO MCP Server")
-    parser.add_argument(
-        "-s", "--sse", action="store_true", help="Run in SSE mode instead of stdio"
-    )
-    parser.add_argument(
-        "--host", type=str, default="127.0.0.1", help="Host to bind the server to"
-    )
-    args = parser.parse_args()
-
     server = create_mcp_server()
 
     if args.sse:
-        server.run(transport="streamable-http", host=args.host)
+        server.run(transport="streamable-http", host=args.host, port=args.port)
     else:
         server.run()
 
