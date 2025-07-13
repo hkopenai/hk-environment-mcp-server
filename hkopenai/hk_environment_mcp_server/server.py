@@ -22,7 +22,7 @@ def create_mcp_server():
     return mcp
 
 
-def main(args):
+def main(host: str, port: int, sse: bool):
     """
     Main function to run the HK OpenAI Environment MCP Server.
     Args:
@@ -30,8 +30,8 @@ def main(args):
     """
     server = create_mcp_server()
 
-    if args.sse:
-        server.run(transport="streamable-http", host=args.host, port=args.port)
+    if sse:
+        server.run(transport="streamable-http", host=host, port=port)
     else:
         server.run()
 
