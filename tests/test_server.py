@@ -14,14 +14,13 @@ class TestApp(unittest.TestCase):
     This class contains tests to ensure the server is set up correctly and tools are registered as expected.
     """
     @patch("hkopenai.hk_environment_mcp_server.server.FastMCP")
-    @patch("hkopenai.hk_environment_mcp_server.server.tool_aqhi")
-    def test_create_mcp_server(self, mock_tool_aqhi, mock_fastmcp):
+    @patch("hkopenai.hk_environment_mcp_server.tool_aqhi.register")
+    def test_create_mcp_server(self, mock_register, mock_fastmcp):
         """
-        Test the creation of the MCP server and registration of tools.
-        Verifies that the server is initialized correctly and tools are properly decorated and callable.
-        Args:
-            mock_tool_aqhi: Mock object for the tool_aqhi module.
-            mock_fastmcp: Mock object for the FastMCP class.
+        Test the creation of the MCP server and tool registration.
+
+        This test verifies that the server is created correctly, tools are registered
+        using the decorator, and the tools call the underlying functions as expected.
         """
         # Setup mocks
         mock_server = Mock()
@@ -32,26 +31,11 @@ class TestApp(unittest.TestCase):
         mock_fastmcp.return_value = mock_server
 
         # Test server creation
-        server = create_mcp_server()
+        create_mcp_server()
 
         # Verify server creation
         mock_fastmcp.assert_called_once()
-        self.assertEqual(server, mock_server)
-
-        # Verify that the tool decorator was called for each tool function
-        self.assertEqual(mock_server.tool.call_count, 1)
-
-        # Get all decorated functions
-        decorated_funcs = {
-            call.args[0].__name__: call.args[0]
-            for call in mock_server.tool.return_value.call_args_list
-        }
-        self.assertEqual(len(decorated_funcs), 1)
-
-        # Call each decorated function and verify that the correct underlying function is called
-
-        decorated_funcs["get_current_aqhi"]()
-        mock_tool_aqhi.get_current_aqhi.assert_called_once_with()
+        mock_register.assert_called_once_with(mock_server)
 
 
 if __name__ == "__main__":

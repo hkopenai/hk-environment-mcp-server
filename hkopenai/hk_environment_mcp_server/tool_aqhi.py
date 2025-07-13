@@ -3,9 +3,23 @@ Module for fetching and parsing Air Quality Health Index (AQHI) data from the En
 This module provides functionality to retrieve current AQHI values for various monitoring stations.
 """
 
-import requests
 import xml.etree.ElementTree as ET
 from typing import List, Dict
+import requests
+
+
+def register(mcp):
+    """Registers the AQHI tool with the FastMCP server."""
+    @mcp.tool(
+        description="Current Air Quality Health Index (AQHI) at individual general and roadside Air Quality Monitoring stations in Hong Kong. The AQHIs are reported on a scale of 1 to 10 and 10+ and are grouped into five AQHI health risk categories with health advice provided. "
+    )
+    def get_current_aqhi() -> List[Dict]:
+        """Get current Air Quality Health Index (AQHI) at individual general and roadside Air Quality Monitoring stations in Hong Kong
+
+        Returns:
+            List of dictionaries with AQHI data including station name, AQHI value, risk level, and station type
+        """
+        return _get_current_aqhi()
 
 
 def fetch_aqhi_data() -> str:
@@ -73,7 +87,7 @@ def parse_aqhi_data(xml_data: str) -> List[Dict]:
     return aqhi_data
 
 
-def get_current_aqhi() -> List[Dict]:
+def _get_current_aqhi() -> List[Dict]:
     """Get current Air Quality Health Index (AQHI) at individual general and roadside Air Quality Monitoring stations in Hong Kong
 
     Returns:
