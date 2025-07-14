@@ -36,5 +36,4 @@ def main(host: str, port: int, sse: bool):
         server.run()
 
 
-if __name__ == "__main__":
-    main()
+
