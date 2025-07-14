@@ -10,6 +10,7 @@ import requests
 
 def register(mcp):
     """Registers the AQHI tool with the FastMCP server."""
+
     @mcp.tool(
         description="Current Air Quality Health Index (AQHI) at individual general and roadside Air Quality Monitoring stations in Hong Kong. The AQHIs are reported on a scale of 1 to 10 and 10+ and are grouped into five AQHI health risk categories with health advice provided. "
     )

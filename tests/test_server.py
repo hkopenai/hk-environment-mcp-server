@@ -13,6 +13,7 @@ class TestApp(unittest.TestCase):
     Test class for verifying MCP server creation and tool registration.
     This class contains tests to ensure the server is set up correctly and tools are registered as expected.
     """
+
     @patch("hkopenai.hk_environment_mcp_server.server.FastMCP")
     @patch("hkopenai.hk_environment_mcp_server.tool_aqhi.register")
     def test_create_mcp_server(self, mock_register, mock_fastmcp):

@@ -11,7 +11,7 @@ def create_mcp_server():
     """
     Create and configure the MCP server for HK OpenAI Environment.
     This function initializes the server with necessary tools and configurations.
-    
+
     Returns:
         FastMCP: Configured MCP server instance.
     """

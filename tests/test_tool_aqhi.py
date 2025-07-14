@@ -18,6 +18,7 @@ class TestAQHITool(unittest.TestCase):
     Test class for verifying AQHI tool functionality.
     This class contains tests to ensure correct fetching and parsing of AQHI data from the Environmental Protection Department.
     """
+
     def setUp(self):
         self.sample_xml = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -152,6 +153,7 @@ class TestAQHITool(unittest.TestCase):
     Test class for verifying AQHI tool functionality.
     This class contains tests to ensure correct fetching and parsing of AQHI data from the Environmental Protection Department.
     """
+
     def setUp(self):
         self.sample_xml = """
 <?xml version="1.0" encoding="UTF-8"?>
