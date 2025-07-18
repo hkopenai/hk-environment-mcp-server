@@ -5,7 +5,7 @@ This module provides functionality to retrieve current AQHI values for various m
 
 import xml.etree.ElementTree as ET
 from typing import List, Dict
-import requests
+from hkopenai_common.xml_utils import fetch_xml_from_url
 
 
 def register(mcp):
@@ -23,12 +23,10 @@ def register(mcp):
         return _get_current_aqhi()
 
 
-def fetch_aqhi_data() -> str:
+def fetch_aqhi_data():
     """Fetch AQHI data from Environmental Protection Department RSS feed"""
     url = "https://www.aqhi.gov.hk/epd/ddata/html/out/aqhi_ind_rss_Eng.xml"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.text
+    return fetch_xml_from_url(url)
 
 
 def parse_aqhi_data(xml_data: str) -> List[Dict]:

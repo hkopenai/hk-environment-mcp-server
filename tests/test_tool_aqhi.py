@@ -5,12 +5,7 @@ This module contains unit tests to verify fetching and parsing of AQHI data.
 
 import unittest
 from unittest.mock import patch, Mock, MagicMock
-from hkopenai.hk_environment_mcp_server.tool_aqhi import (
-    fetch_aqhi_data,
-    parse_aqhi_data,
-    _get_current_aqhi,
-    register,
-)
+from hkopenai_common.xml_utils import fetch_xml_from_url
 
 
 class TestAQHITool(unittest.TestCase):
@@ -60,22 +55,19 @@ class TestAQHITool(unittest.TestCase):
 </rss>
         """
 
-    @patch("requests.get")
-    def test_fetch_aqhi_data(self, mock_get):
+    @patch("hkopenai.common_mcp_server_utils.xml_utils.fetch_xml_from_url")
+    def test_fetch_aqhi_data(self, mock_fetch_xml_from_url):
         """
         Test fetching AQHI data from the Environmental Protection Department RSS feed.
-        Verifies that the data is fetched correctly using a mocked HTTP response.
+        Verifies that the data is fetched correctly using a mocked XML fetching utility.
         Args:
-            mock_get: Mock object for the requests.get function.
+            mock_fetch_xml_from_url: Mock object for the fetch_xml_from_url function.
         """
-        mock_response = Mock()
-        mock_response.text = self.sample_xml
-        mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
+        mock_fetch_xml_from_url.return_value = ET.fromstring(self.sample_xml)
 
         result = fetch_aqhi_data()
-        self.assertEqual(result, self.sample_xml)
-        mock_get.assert_called_once_with(
+        self.assertEqual(ET.tostring(result, encoding="unicode"), self.sample_xml)
+        mock_fetch_xml_from_url.assert_called_once_with(
             "https://www.aqhi.gov.hk/epd/ddata/html/out/aqhi_ind_rss_Eng.xml"
         )
 
@@ -146,6 +138,7 @@ class TestAQHITool(unittest.TestCase):
         ) as mock_get_current_aqhi:
             decorated_function()
             mock_get_current_aqhi.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()
