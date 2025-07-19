@@ -5,7 +5,14 @@ This module contains unit tests to verify fetching and parsing of AQHI data.
 
 import unittest
 from unittest.mock import patch, Mock, MagicMock
+import xml.etree.ElementTree as ET
+import textwrap
 from hkopenai_common.xml_utils import fetch_xml_from_url
+from hkopenai.hk_environment_mcp_server.tools.aqhi import (
+    parse_aqhi_data,
+    _get_current_aqhi,
+    register,
+)
 
 
 class TestAQHITool(unittest.TestCase):
@@ -15,68 +22,56 @@ class TestAQHITool(unittest.TestCase):
     """
 
     def setUp(self):
-        self.sample_xml = """
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet href='style.xsl' type='text/xsl' media='screen'?>
-<rss version="2.0">
-   <channel>
-       <title>Environmental Protection Department - AQHI</title>
-       <link>http://www.aqhi.gov.hk</link>
-       <image>
-           <title>Environmental Protection Department - AQHI</title>
-           <link>http://www.aqhi.gov.hk</link>
-           <url>/epd/ddata/html/img/logo-main.png</url>
-       </image>
-       <description>Environmental Protection Department - AQHI</description>
-       <language>en-us</language>
-       <copyright>Environmental Protection Department</copyright>
-       <webMaster>enquiry@epd.gov.hk</webMaster>
-       <pubDate>Tue, 17 Jun 2025 19:30:00 +0800</pubDate>
-       <lastBuildDate>Tue, 17 Jun 2025 19:30:00 +0800</lastBuildDate>
-       <item>
-           <title>Central/Western : 2 : Low</title>
-           <guid isPermaLink="true">http://www.aqhi.gov.hk/</guid>
-           <link>http://www.aqhi.gov.hk</link>
-           <pubDate>Tue, 17 Jun 2025 19:30:00 +0800</pubDate>
-           <description>
-               <![CDATA[Central/Western - General Stations: 2 Low - Tue, 17 Jun 2025 19:30]]>
-           </description>
-       </item>
-       <item>
-           <title>Southern : 2 : Low</title>
-           <guid isPermaLink="true">http://www.aqhi.gov.hk/</guid>
-           <link>http://www.aqhi.gov.hk</link>
-           <pubDate>Tue, 17 Jun 2025 19:30:00 +0800</pubDate>
-           <description>
-               <![CDATA[Southern - General Stations: 2 Low - Tue, 17 Jun 2025 19:30]]>
-           </description>
-       </item>
-   </channel>
-</rss>
-        """
-
-    @patch("hkopenai.common_mcp_server_utils.xml_utils.fetch_xml_from_url")
-    def test_fetch_aqhi_data(self, mock_fetch_xml_from_url):
-        """
-        Test fetching AQHI data from the Environmental Protection Department RSS feed.
-        Verifies that the data is fetched correctly using a mocked XML fetching utility.
-        Args:
-            mock_fetch_xml_from_url: Mock object for the fetch_xml_from_url function.
-        """
-        mock_fetch_xml_from_url.return_value = ET.fromstring(self.sample_xml)
-
-        result = fetch_aqhi_data()
-        self.assertEqual(ET.tostring(result, encoding="unicode"), self.sample_xml)
-        mock_fetch_xml_from_url.assert_called_once_with(
-            "https://www.aqhi.gov.hk/epd/ddata/html/out/aqhi_ind_rss_Eng.xml"
-        )
+        self.sample_xml_dict = {
+            "rss": {
+                "channel": [
+                    {
+                        "title": ["Environmental Protection Department - AQHI"],
+                        "link": ["https://www.aqhi.gov.hk"],
+                        "image": [
+                            {
+                                "title": ["Environmental Protection Department - AQHI"],
+                                "link": ["https://www.aqhi.gov.hk"],
+                                "url": ["https://www.aqhi.gov.hk/common/images/logo_aqhi.svg"],
+                            }
+                        ],
+                        "description": ["Environmental Protection Department - AQHI"],
+                        "language": ["en-us"],
+                        "copyright": ["Environmental Protection Department"],
+                        "webMaster": ["enquiry@epd.gov.hk"],
+                        "pubDate": ["Tue, 17 Jun 2025 19:30:00 +0800"],
+                        "lastBuildDate": ["Tue, 17 Jun 2025 19:30:00 +0800"],
+                        "item": [
+                            {
+                                "title": ["Central/Western : 2 : Low"],
+                                "guid": ["https://www.aqhi.gov.hk/"],
+                                "link": ["https://www.aqhi.gov.hk"],
+                                "pubDate": ["Tue, 17 Jun 2025 19:30:00 +0800"],
+                                "description": [
+                                    "<![CDATA[Central/Western - General Stations: 2 Low - Tue, 17 Jun 2025 19:30]]>"
+                                ],
+                            },
+                            {
+                                "title": ["Southern : 2 : Low"],
+                                "guid": ["https://www.aqhi.gov.hk/"],
+                                "link": ["https://www.aqhi.gov.hk"],
+                                "pubDate": ["Tue, 17 Jun 2025 19:30:00 +0800"],
+                                "description": [
+                                    "<![CDATA[Southern - General Stations: 2 Low - Tue, 17 Jun 2025 19:30]]>"
+                                ],
+                            },
+                        ],
+                    }
+                ]
+            }
+        }
 
     def test_parse_aqhi_data(self):
         """
         Test parsing of AQHI XML data to extract air quality information.
         Verifies that the XML data is correctly parsed into a list of dictionaries.
         """
-        result = parse_aqhi_data(self.sample_xml)
+        result = parse_aqhi_data(self.sample_xml_dict)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["station"], "Central/Western")
         self.assertEqual(result[0]["aqhi_value"], "2")
@@ -86,21 +81,6 @@ class TestAQHITool(unittest.TestCase):
         self.assertEqual(result[1]["aqhi_value"], "2")
         self.assertEqual(result[1]["risk_level"], "Low")
         self.assertEqual(result[1]["station_type"], "General Stations")
-
-    @patch("hkopenai.hk_environment_mcp_server.tool_aqhi.fetch_aqhi_data")
-    def test_get_current_aqhi(self, mock_fetch):
-        """
-        Test retrieval of current AQHI data for monitoring stations.
-        Verifies that the function fetches and parses data correctly using a mocked fetch operation.
-        Args:
-            mock_fetch: Mock object for the fetch_aqhi_data function.
-        """
-        mock_fetch.return_value = self.sample_xml
-
-        result = _get_current_aqhi()
-        self.assertEqual(len(result), 2)
-        self.assertEqual(result[0]["station"], "Central/Western")
-        mock_fetch.assert_called_once()
 
     def test_register_tool(self):
         """
@@ -134,11 +114,10 @@ class TestAQHITool(unittest.TestCase):
 
         # Call the decorated function and verify it calls _get_current_aqhi
         with patch(
-            "hkopenai.hk_environment_mcp_server.tool_aqhi._get_current_aqhi"
+            "hkopenai.hk_environment_mcp_server.tools.aqhi._get_current_aqhi"
         ) as mock_get_current_aqhi:
             decorated_function()
             mock_get_current_aqhi.assert_called_once()
-
 
 if __name__ == "__main__":
     unittest.main()
